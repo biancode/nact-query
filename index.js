@@ -44,7 +44,6 @@ const performQuery = async (msg, res) => {
         res.sendStatus(500);
         break;
     }
-    console.log(JSON.stringify(result));
   } catch (e) {
     console.log(e.message);
     res.sendStatus(504);
@@ -53,24 +52,21 @@ const performQuery = async (msg, res) => {
 
 app.use(bodyParser.json());
 
-app.get('/api/contacts', (req, res) => performQuery({ type: coreServices.service.ContactProtocolTypes.GET_CONTACTS }, res));
+app.get('/api/contacts', (req, res) =>
+  performQuery({ type: coreServices.service.ContactProtocolTypes.GET_CONTACTS }, res)
+);
 
-app.get('/api/contacts/:contact_id', (req, res) => {
-  console.log('Request Params:' + JSON.stringify(req.params));
-  performQuery({ type: coreServices.service.ContactProtocolTypes.GET_CONTACT, contactId: req.params.contact_id }, res);
-});
+app.get('/api/contacts/:contact_id', (req, res) =>
+  performQuery({ type: coreServices.service.ContactProtocolTypes.GET_CONTACT, contactId: req.params.contact_id }, res)
+);
 
-app.post('/api/contacts', (req, res) => {
-  console.log('Request Body:' + JSON.stringify(req.body));
-  console.log('Request Params:' + JSON.stringify(req.params));
-  performQuery({ type: coreServices.service.ContactProtocolTypes.CREATE_CONTACT, payload: req.body }, res);
-});
+app.post('/api/contacts', (req, res) =>
+  performQuery({ type: coreServices.service.ContactProtocolTypes.CREATE_CONTACT, payload: req.body }, res)
+);
 
-app.patch('/api/contacts/:contact_id', (req, res) => {
-  console.log('Request Body:' + JSON.stringify(req.body));
-  console.log('Request Params:' + JSON.stringify(req.params));
-  performQuery({ type: coreServices.service.ContactProtocolTypes.UPDATE_CONTACT, contactId: req.params.contact_id, payload: req.body }, res);
-});
+app.patch('/api/contacts/:contact_id', (req, res) =>
+  performQuery({ type: coreServices.service.ContactProtocolTypes.UPDATE_CONTACT, contactId: req.params.contact_id, payload: req.body }, res)
+);
 
 app.delete('/api/contacts/:contact_id', (req, res) =>
   performQuery({ type: coreServices.service.ContactProtocolTypes.REMOVE_CONTACT, contactId: req.params.contact_id }, res)
