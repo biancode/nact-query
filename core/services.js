@@ -26,9 +26,7 @@ THE SOFTWARE. */
 const uuidv4 = require('uuid/v4');
 const nact = require('nact');
 const nactSystem = nact.start();
-
-let initNactState = { contacts: {} };
-let nactState = new Object(initNactState);
+const initNactState = { contacts: {} };
 
 const ContactProtocolTypes = {
   GET_CONTACTS: 'GET_CONTACTS',
@@ -42,7 +40,7 @@ const ContactProtocolTypes = {
   OPERATION_NOT_FOUND: 'OPERATION_NOT_FOUND'
 };
 
-const stateIsReady = (state) => {
+const stateIsReady = (state, ctx) => {
   if (!state.contacts) {
     console.error('renew broken state for storing contacts');
     state = new Object(initNactState);
@@ -53,7 +51,7 @@ const stateIsReady = (state) => {
     );
   }
   return state;
-}
+};
 
 const sendAllContacts = (contacts, ctx) => {
   nact.dispatch(
@@ -61,14 +59,14 @@ const sendAllContacts = (contacts, ctx) => {
     { type: ContactProtocolTypes.SUCCESS, payload: Object.values(contacts) },
     ctx.self
   );
-}
+};
 
 const addContactToState = (state, ctx, contactData) => {
   const newContact = { id: uuidv4(), ...contactData };
   state.contacts = { ...state.contacts, [newContact.id]: newContact };
   nact.dispatch(ctx.sender, { type: ContactProtocolTypes.SUCCESS, payload: newContact });
   return state;
-}
+};
 
 const sendOperationNotFound = (ctx, requestType) => {
   nact.dispatch(
@@ -76,7 +74,7 @@ const sendOperationNotFound = (ctx, requestType) => {
     { type: ContactProtocolTypes.OPERATION_NOT_FOUND, payload: requestType },
     ctx.self
   );
-}
+};
 
 const sendContactNotFound = (ctx, contactId) => {
   nact.dispatch(
@@ -84,27 +82,27 @@ const sendContactNotFound = (ctx, contactId) => {
     { type: ContactProtocolTypes.NOT_FOUND, contactId: contactId },
     ctx.self
   );
-}
+};
 
 const handleExpliciteRequest = (state, ctx, requestType, contact, newData) => {
   switch (requestType) {
     case ContactProtocolTypes.GET_CONTACT:
       nact.dispatch(ctx.sender, { type: ContactProtocolTypes.SUCCESS, payload: contact });
-
+      break;
     case ContactProtocolTypes.REMOVE_CONTACT:
       state.contacts = { ...state.contacts, [contact.id]: undefined };
       nact.dispatch(ctx.sender, { type: ContactProtocolTypes.SUCCESS, payload: contact });
-
+      break;
     case ContactProtocolTypes.UPDATE_CONTACT:
       const updatedContact = { ...contact, ...newData };
       state.contacts = { ...state.contacts, [updatedContact.id]: updatedContact };
       nact.dispatch(ctx.sender, { type: ContactProtocolTypes.SUCCESS, payload: updatedContact });
-
+      break;
     default:
-      sendContactNotFound(ctx, requestType);
+      sendOperationNotFound(ctx, requestType);
   }
   return state;
-}
+};
 
 const handleRequest = (state, ctx, msg) => {
   if (msg.type === ContactProtocolTypes.GET_CONTACTS) {
@@ -121,12 +119,12 @@ const handleRequest = (state, ctx, msg) => {
     }
   }
   return state;
-}
+};
 
 const contactsService = nact.spawn(
   nactSystem,
   (state = new Object(initNactState), msg, ctx) => {
-    if (stateIsReady(state)) {
+    if (stateIsReady(state, ctx)) {
       state = handleRequest(state, ctx, msg);
     }
     return state; // has to return the actual state
@@ -134,4 +132,4 @@ const contactsService = nact.spawn(
   'contacts'
 );
 
-module.exports.service = { contactsService, ContactProtocolTypes }
+module.exports.service = { contactsService, ContactProtocolTypes };
